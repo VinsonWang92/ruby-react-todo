@@ -4,6 +4,7 @@ import PropTypes from 'prop-types'
 
 import axios from "axios";
 import setAxiosHeaders from "./AxiosHeaders";
+import _ from "lodash";
 
 class TodoItem extends React.Component {
   constructor(props) {
@@ -19,8 +20,25 @@ class TodoItem extends React.Component {
     this.completedRef = React.createRef();
   }
   handleChange() {
-    this.updateTodoItem();
+    this.setState({
+        complete: this.completedRef.current.checked
+      });
+      this.updateTodoItem();
   }
+  updateTodoItem = _.debounce(() => {
+    setAxiosHeaders();
+    axios
+      .put(this.path, {
+        todo_item: {
+          title: this.inputRef.current.value,
+          complete: this.completedRef.current.checked
+        }
+      })
+      .then(response => {})
+      .catch(error => {
+        console.log(error);
+      });
+  }, 1000);
   updateTodoItem() {
     this.setState({ complete: this.completedRef.current.checked });
     setAxiosHeaders();
@@ -53,7 +71,9 @@ class TodoItem extends React.Component {
   render() {
     const { todoItem } = this.props
     return (
-      <tr className={`${this.state.complete ? 'table-light' : ''}`}>
+        <tr
+        className={`${ this.state.complete && this.props.hideCompletedTodoItems ? `d-none` : "" } ${this.state.complete ? "table-light" : ""}`}
+      >
         <td>
           <svg
             className={`bi bi-check-circle ${
@@ -118,4 +138,5 @@ export default TodoItem
 TodoItem.propTypes = {
   todoItem: PropTypes.object.isRequired,
   getTodoItems: PropTypes.func.isRequired,
+  hideCompletedTodoItems: PropTypes.bool.isRequired,
 }
